@@ -42,23 +42,36 @@ export function RCSummary({ spans, spanSectionProps, results, showStress }: any)
                             const sb = results.spanBounds.find((b: any) => b.spanIndex === sp.index);
                             if (!sb) return null;
 
-                            const input = {
+                            const inputPos = {
                                 enabled: true,
                                 fcIdx: sp.rcFcIdx,
                                 width: sp.dims.B,
                                 depth: sp.dims.H,
-                                rebarDia: sp.rcRebarDia,
-                                rebarCount: sp.rcRebarCount,
-                                cover: sp.rcCover
+                                rebarDia: sp.rcRebarDiaBottom || 'D19',
+                                rebarCount: parseInt(sp.rcRebarCountBottom) || 0,
+                                coverTop: parseFloat(sp.rcCoverTop) || 0,
+                                coverBottom: parseFloat(sp.rcCoverBottom) || 0
+                            };
+                            
+                            const inputNeg = {
+                                enabled: true,
+                                fcIdx: sp.rcFcIdx,
+                                width: sp.dims.B,
+                                depth: sp.dims.H,
+                                rebarDia: sp.rcRebarDiaTop || 'D16',
+                                rebarCount: parseInt(sp.rcRebarCountTop) || 0,
+                                coverTop: parseFloat(sp.rcCoverTop) || 0,
+                                coverBottom: parseFloat(sp.rcCoverBottom) || 0
                             };
 
-                            const resPos = calcRCStress(input, sb.maxM, sb.maxM_Q || 0); // Need Q at max M? We can just use calcRCStress for M and Q separately for Maxes
-                            // Actually wait, tau is calculated from Q. So we calculate tau max at maxQ.
+                            const hasPosM = sb.maxM > 0.01;
+                            const hasNegM = sb.minM < -0.01;
+
                             // calculate max M+ stresses
-                            const rcPos = calcRCStress(input, sb.maxM, 0); // tau not relevant here
-                            const rcNeg = calcRCStress(input, sb.minM, 0);
-                            const rcShear = calcRCStress(input, 0, sb.maxQ); // sigma not relevant here
-                            const rcShearMin = calcRCStress(input, 0, sb.minQ);
+                            const rcPos = hasPosM ? calcRCStress(inputPos, sb.maxM, 0) : null;
+                            const rcNeg = hasNegM ? calcRCStress(inputNeg, sb.minM, 0) : null;
+                            const rcShear = calcRCStress(inputPos, 0, sb.maxQ); 
+                            const rcShearMin = calcRCStress(inputPos, 0, sb.minQ);
                             const maxTau = Math.max(rcShear.tau, rcShearMin.tau);
                             const maxQAbs = Math.abs(sb.maxQ) > Math.abs(sb.minQ) ? sb.maxQ : sb.minQ;
 
@@ -66,18 +79,27 @@ export function RCSummary({ spans, spanSectionProps, results, showStress }: any)
                                 <tr key={sp.index} className="border-b">
                                     <td className="px-3 py-2 border font-bold text-slate-600 border-x">Span {sp.index + 1}</td>
                                     <td className="px-3 py-2 border text-xs text-slate-500">
-                                        {sp.dims.B}x{sp.dims.H}<br/>
-                                        {sp.rcRebarCount}-{sp.rcRebarDia} (dt={sp.rcCover})
+                                        <div className="font-bold">{sp.dims.B}x{sp.dims.H} (dt={sp.rcCover})</div>
+                                        {hasPosM && <div>下端: {sp.rcRebarCountBottom}-{sp.rcRebarDiaBottom}</div>}
+                                        {hasNegM && <div>上端: {sp.rcRebarCountTop}-{sp.rcRebarDiaTop}</div>}
                                     </td>
                                     <td className="px-3 py-2 border font-mono">{(sb.maxM || 0).toFixed(1)} kN·m</td>
                                     <td className="px-3 py-2 border text-xs whitespace-nowrap">
-                                        σc: <span className="text-blue-600 font-bold">{rcPos.sigma_c.toFixed(1)}</span> N/mm²<br/>
-                                        σs: <span className="text-red-600 font-bold">{rcPos.sigma_s.toFixed(1)}</span> N/mm²
+                                        {hasPosM && rcPos && sp.rcRebarCountBottom > 0 ? (
+                                            <>
+                                                σc: <span className="text-blue-600 font-bold">{rcPos.sigma_c.toFixed(1)}</span> N/mm²<br/>
+                                                σs: <span className="text-red-600 font-bold">{rcPos.sigma_s.toFixed(1)}</span> N/mm²
+                                            </>
+                                        ) : <span className="text-slate-400">-</span>}
                                     </td>
                                     <td className="px-3 py-2 border font-mono">{(sb.minM || 0).toFixed(1)} kN·m</td>
                                     <td className="px-3 py-2 border text-xs whitespace-nowrap">
-                                        σc: <span className="text-blue-600 font-bold">{rcNeg.sigma_c.toFixed(1)}</span> N/mm²<br/>
-                                        σs: <span className="text-red-600 font-bold">{rcNeg.sigma_s.toFixed(1)}</span> N/mm²
+                                        {hasNegM && rcNeg && sp.rcRebarCountTop > 0 ? (
+                                            <>
+                                                σc: <span className="text-blue-600 font-bold">{rcNeg.sigma_c.toFixed(1)}</span> N/mm²<br/>
+                                                σs: <span className="text-red-600 font-bold">{rcNeg.sigma_s.toFixed(1)}</span> N/mm²
+                                            </>
+                                        ) : <span className="text-slate-400">-</span>}
                                     </td>
                                     <td className="px-3 py-2 border font-mono">{(maxQAbs || 0).toFixed(1)} kN</td>
                                     <td className="px-3 py-2 border text-xs border-r whitespace-nowrap">

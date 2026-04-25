@@ -22,7 +22,7 @@ export function SectionProfileView({ props }: any) {
     const w = s(dims.B), h = s(dims.H); 
     pathD = `M ${cx-w/2} ${cy-h/2} h ${w} v ${h} h ${-w} z`;
     return (
-      <svg width="100%" height="100%" viewBox="0 0 100 100">
+      <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ overflow: 'visible' }}>
         <path d={pathD} fill="#cbd5e1" stroke="#475569" strokeWidth="1.5" />
         <text x={cx} y={cy+h/2+10} textAnchor="middle" fontSize="8" fill="#475569">b={dims.B}</text>
         <text x={cx+w/2+2} y={cy} textAnchor="start" fontSize="8" fill="#475569">D={dims.H}</text>
@@ -42,5 +42,5 @@ export function SectionProfileView({ props }: any) {
         pathD = `M ${cx-dB/2} ${cy-dH/2} h ${dB} v ${dH} h ${-dB} z M ${cx-(dB-2*dt)/2} ${cy-(dH-2*dt)/2} v ${dH-2*dt} h ${dB-2*dt} v ${-(dH-2*dt)} z`;
     }
   }
-  return <svg width="100%" height="100%" viewBox="0 0 100 100"><path d={pathD} fill="#cbd5e1" stroke="#475569" strokeWidth="1.5" fillRule="evenodd" transform={axis === 'weak' ? `rotate(90, ${cx}, ${cy})` : ''} /></svg>;
+  return <svg width="100%" height="100%" viewBox="0 0 100 100" style={{ overflow: 'visible' }}><path d={pathD} fill="#cbd5e1" stroke="#475569" strokeWidth="1.5" fillRule="evenodd" transform={axis === 'weak' ? `rotate(90, ${cx}, ${cy})` : ''} /></svg>;
 }

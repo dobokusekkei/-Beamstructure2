@@ -9,6 +9,10 @@ export const REBAR_AREAS: Record<string, number> = {
     'D25': 506.7,
     'D29': 642.4,
     'D32': 794.2,
+    'D35': 956.6,
+    'D38': 1140.0,
+    'D41': 1339.0,
+    'D51': 2027.0,
 };
 
 export interface RCCalcInput {
@@ -18,7 +22,8 @@ export interface RCCalcInput {
     depth: number;
     rebarDia: string;
     rebarCount: number;
-    cover: number;
+    coverTop: number;
+    coverBottom: number;
 }
 
 export interface RCCalcResult {
@@ -44,7 +49,8 @@ export function calcRCStress(input: RCCalcInput, M: number, Q: number): RCCalcRe
 
     const n = 15; // Young's modulus ratio
     const b = input.width;
-    const d = input.depth - input.cover; // Effective depth
+    const cover = M < 0 ? input.coverTop : input.coverBottom;
+    const d = input.depth - cover; // Effective depth
     const As = (REBAR_AREAS[input.rebarDia] || 0) * input.rebarCount;
 
     if (As <= 0 || d <= 0) {

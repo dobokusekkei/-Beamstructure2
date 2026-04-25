@@ -12,7 +12,8 @@ export function MaterialSettings({
     applyToAllSpans, 
     activeMat, 
     updateMaterial, 
-    activeSectionProps 
+    activeSectionProps,
+    results
 }: any) {
     return (
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -101,26 +102,44 @@ export function MaterialSettings({
                         <input type="checkbox" checked={activeMat.rcCalcEnable} onChange={e => updateMaterial('rcCalcEnable', e.target.checked)} className="rounded text-blue-600 focus:ring-blue-500"/>
                         <span className="text-xs font-bold text-slate-700">RC断面計算 (単鉄筋) を行う</span>
                     </label>
-                    {activeMat.rcCalcEnable && (
+                    {activeMat.rcCalcEnable && (() => {
+                        const sb = results?.spanBounds?.find((b: any) => b.spanIndex === activeSpanIdx);
+                        const hasPosM = !sb || sb.maxM > 0.01;
+                        const hasNegM = !sb || sb.minM < -0.01;
+
+                        return (
                         <div className="space-y-3 pt-2 border-t border-slate-200">
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-2 gap-3 pb-2 border-b border-slate-100">
+                                {hasNegM ? (
                                 <div>
-                                    <label className="text-[10px] text-slate-500 font-bold block mb-1">引張鉄筋</label>
-                                    <select value={activeMat.rcRebarDia} onChange={e=>updateMaterial('rcRebarDia', e.target.value)} className="w-full p-1.5 border rounded text-xs">
-                                        {Object.keys(REBAR_AREAS).map(dia => <option key={dia} value={dia}>{dia}</option>)}
-                                    </select>
+                                    <label className="text-[10px] text-slate-500 font-bold block mb-1">上端鉄筋 (M &lt; 0 用)</label>
+                                    <div className="flex gap-1 mb-2">
+                                        <select value={activeMat.rcRebarDiaTop || 'D16'} onChange={e=>updateMaterial('rcRebarDiaTop', e.target.value)} className="w-1/2 p-1.5 border rounded text-xs">
+                                            {Object.keys(REBAR_AREAS).map(dia => <option key={dia} value={dia}>{dia}</option>)}
+                                        </select>
+                                        <input type="number" min="0" placeholder="本数" value={activeMat.rcRebarCountTop ?? 2} onChange={e=>updateMaterial('rcRebarCountTop', e.target.value)} className="w-1/2 p-1.5 border rounded text-xs"/>
+                                    </div>
+                                    <label className="text-[10px] text-slate-500 font-bold block mb-1">上端かぶり dt (mm)</label>
+                                    <input type="number" value={activeMat.rcCoverTopStr ?? 50} onChange={e=>updateMaterial('rcCoverTopStr', e.target.value)} className="w-full p-1.5 border rounded text-xs"/>
                                 </div>
+                                ) : <div />}
+                                {hasPosM ? (
                                 <div>
-                                    <label className="text-[10px] text-slate-500 font-bold block mb-1">本数 (本)</label>
-                                    <input type="number" value={activeMat.rcRebarCount} onChange={e=>updateMaterial('rcRebarCount', e.target.value)} className="w-full p-1.5 border rounded text-xs"/>
+                                    <label className="text-[10px] text-slate-500 font-bold block mb-1">下端鉄筋 (M &gt; 0 用)</label>
+                                    <div className="flex gap-1 mb-2">
+                                        <select value={activeMat.rcRebarDiaBottom || 'D19'} onChange={e=>updateMaterial('rcRebarDiaBottom', e.target.value)} className="w-1/2 p-1.5 border rounded text-xs">
+                                            {Object.keys(REBAR_AREAS).map(dia => <option key={dia} value={dia}>{dia}</option>)}
+                                        </select>
+                                        <input type="number" min="0" placeholder="本数" value={activeMat.rcRebarCountBottom ?? 4} onChange={e=>updateMaterial('rcRebarCountBottom', e.target.value)} className="w-1/2 p-1.5 border rounded text-xs"/>
+                                    </div>
+                                    <label className="text-[10px] text-slate-500 font-bold block mb-1">下端かぶり dt (mm)</label>
+                                    <input type="number" value={activeMat.rcCoverBottomStr ?? 50} onChange={e=>updateMaterial('rcCoverBottomStr', e.target.value)} className="w-full p-1.5 border rounded text-xs"/>
                                 </div>
-                            </div>
-                            <div>
-                                <label className="text-[10px] text-slate-500 font-bold block mb-1">かぶり厚さ dt (mm)</label>
-                                <input type="number" value={activeMat.rcCoverStr} onChange={e=>updateMaterial('rcCoverStr', e.target.value)} className="w-full p-1.5 border rounded text-xs"/>
+                                ) : <div />}
                             </div>
                         </div>
-                    )}
+                        );
+                    })()}
                 </div>
             </div>
             )}

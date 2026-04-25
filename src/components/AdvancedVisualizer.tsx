@@ -219,6 +219,7 @@ export function AdvancedVisualizer({ spans, supports, totalLength, loads, result
                    </g>;
                 } else {
                    const x2 = scaleX(l.pos + l.length), mag2 = l.type === 'trapezoid' ? l.magEnd : l.mag, h2 = Math.abs(mag2) * loadHScale, y1P = isNeg ? currentBeamY + h1 : currentBeamY - h1, y2P = mag2 < 0 ? currentBeamY + h2 : currentBeamY - h2;
+                   const centerPosTextY = mag2 < 0 ? currentBeamY + Math.max(h1, h2) + 12 : currentBeamY - Math.max(h1, h2) - 8;
                    
                    if ((l.mag > 0 && mag2 < 0) || (l.mag < 0 && mag2 > 0)) {
                       const ratio = Math.abs(l.mag) / (Math.abs(l.mag) + Math.abs(mag2));
@@ -234,11 +235,12 @@ export function AdvancedVisualizer({ spans, supports, totalLength, loads, result
                           <line x1={x2} y1={y2P} x2={x2} y2={currentBeamY + (mag2 < 0 ? 5 : -5)} stroke={COLORS.load} strokeWidth="1.5" markerEnd="url(#arrow)"/>
                           <text x={x} y={textY} textAnchor="end" fontSize="10" fill={COLORS.load} fontWeight="bold">{l.mag}kN/m</text>
                           <text x={x2} y={getAdjustedLoadTextY(x2, (mag2 < 0 ? currentBeamY + h2 + 15 : currentBeamY - h2 - 5), mag2 < 0)} textAnchor="start" fontSize="10" fill={COLORS.load} fontWeight="bold">{mag2}kN/m</text>
+                          <text x={(x+x2)/2} y={centerPosTextY} textAnchor="middle" fontSize="9" fill={COLORS.dim}>x={l.pos}~{(l.pos+l.length).toFixed(1)}m</text>
                         </g>
                       );
                    }
                    
-                   return <g key={l.id}>{shift > 0 && <g><line x1={x} y1={currentBeamY} x2={x} y2={beamY} stroke={COLORS.load} strokeWidth="1" strokeDasharray="2" opacity="0.5" /><line x1={x2} y1={currentBeamY} x2={x2} y2={beamY} stroke={COLORS.load} strokeWidth="1" strokeDasharray="2" opacity="0.5" /></g>}<polygon points={`${x},${currentBeamY} ${x},${y1P} ${x2},${y2P} ${x2},${currentBeamY}`} fill={COLORS.loadPolygon} /><line x1={x} y1={y1P} x2={x2} y2={y2P} stroke={COLORS.load} strokeWidth="1.5"/><line x1={x} y1={y1P} x2={x} y2={currentBeamY + (isNeg ? 5 : -5)} stroke={COLORS.load} strokeWidth="1.5" markerEnd="url(#arrow)"/><line x1={x2} y1={y2P} x2={x2} y2={currentBeamY + (mag2 < 0 ? 5 : -5)} stroke={COLORS.load} strokeWidth="1.5" markerEnd="url(#arrow)"/><text x={x} y={textY} textAnchor="end" fontSize="10" fill={COLORS.load} fontWeight="bold">{l.mag}kN/m</text><text x={x2} y={getAdjustedLoadTextY(x2, (mag2 < 0 ? currentBeamY + h2 + 15 : currentBeamY - h2 - 5), mag2 < 0)} textAnchor="start" fontSize="10" fill={COLORS.load} fontWeight="bold">{mag2}kN/m</text><text x={(x+x2)/2} y={posTextY} textAnchor="middle" fontSize="9" fill={COLORS.dim}>x={l.pos}~{(l.pos+l.length).toFixed(1)}m</text></g>;
+                   return <g key={l.id}>{shift > 0 && <g><line x1={x} y1={currentBeamY} x2={x} y2={beamY} stroke={COLORS.load} strokeWidth="1" strokeDasharray="2" opacity="0.5" /><line x1={x2} y1={currentBeamY} x2={x2} y2={beamY} stroke={COLORS.load} strokeWidth="1" strokeDasharray="2" opacity="0.5" /></g>}<polygon points={`${x},${currentBeamY} ${x},${y1P} ${x2},${y2P} ${x2},${currentBeamY}`} fill={COLORS.loadPolygon} /><line x1={x} y1={y1P} x2={x2} y2={y2P} stroke={COLORS.load} strokeWidth="1.5"/><line x1={x} y1={y1P} x2={x} y2={currentBeamY + (isNeg ? 5 : -5)} stroke={COLORS.load} strokeWidth="1.5" markerEnd="url(#arrow)"/><line x1={x2} y1={y2P} x2={x2} y2={currentBeamY + (mag2 < 0 ? 5 : -5)} stroke={COLORS.load} strokeWidth="1.5" markerEnd="url(#arrow)"/><text x={x} y={textY} textAnchor="end" fontSize="10" fill={COLORS.load} fontWeight="bold">{l.mag}kN/m</text><text x={x2} y={getAdjustedLoadTextY(x2, (mag2 < 0 ? currentBeamY + h2 + 15 : currentBeamY - h2 - 5), mag2 < 0)} textAnchor="start" fontSize="10" fill={COLORS.load} fontWeight="bold">{mag2}kN/m</text><text x={(x+x2)/2} y={centerPosTextY} textAnchor="middle" fontSize="9" fill={COLORS.dim}>x={l.pos}~{(l.pos+l.length).toFixed(1)}m</text></g>;
                 }
             });
           })()}

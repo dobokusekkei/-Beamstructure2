@@ -44,9 +44,12 @@ export default function App() {
     rcWidthStr: '300',
     rcDepthStr: '600',
     rcCalcEnable: false,
-    rcRebarDia: 'D19',
-    rcRebarCount: '4',
-    rcCoverStr: '50'
+    rcRebarDiaTop: 'D16',
+    rcRebarCountTop: '2',
+    rcRebarDiaBottom: 'D19',
+    rcRebarCountBottom: '4',
+    rcCoverTopStr: '50',
+    rcCoverBottomStr: '50'
   };
   const [materials, setMaterials] = useState<any[]>([{...defaultMaterial}]);
   const [activeSpanIdx, setActiveSpanIdx] = useState(0);
@@ -164,7 +167,7 @@ export default function App() {
         A = areaM2 * 10000; w = areaM2 * 2400;
         label = `RC造 ${fcData.label} ${b}x${D}`;
       }
-      return { E, I, Z, label, dims, shape: mat.steelShape, axis: mat.steelAxis, matType: mat.matType, effI: mat.effI, effZ: mat.effZ, wallLength: mat.wallLength, A, w, rcCalcEnable: mat.rcCalcEnable, rcFcIdx: mat.rcFcIdx, rcRebarDia: mat.rcRebarDia, rcRebarCount: Number(mat.rcRebarCount), rcCover: Number(mat.rcCoverStr) };
+      return { E, I, Z, label, dims, shape: mat.steelShape, axis: mat.steelAxis, matType: mat.matType, effI: mat.effI, effZ: mat.effZ, wallLength: mat.wallLength, A, w, rcCalcEnable: mat.rcCalcEnable, rcFcIdx: mat.rcFcIdx, rcRebarDiaTop: mat.rcRebarDiaTop || 'D16', rcRebarCountTop: Number(mat.rcRebarCountTop || 2), rcRebarDiaBottom: mat.rcRebarDiaBottom || 'D19', rcRebarCountBottom: Number(mat.rcRebarCountBottom || 4), rcCover: Number(mat.rcCoverStr) };
     });
   }, [materials, spans]);
 
@@ -254,10 +257,10 @@ export default function App() {
     csvContent += `[INFO],Version,21.60,Date,${new Date().toLocaleDateString()}\n`;
     csvContent += `[INPUT_BASIC],SpanStr,"${spanStr}",BeamType,${beamType}\n`;
     
-    csvContent += `[HEADER_MATERIAL],SpanIdx,MatType,Shape,ProfileIdx,Axis,ManualI,ManualZ,ManualA,ManualE,FcIdx,Width,Depth,EffI,EffZ,WallLength\n`;
+    csvContent += `[HEADER_MATERIAL],SpanIdx,MatType,Shape,ProfileIdx,Axis,ManualI,ManualZ,ManualA,ManualE,FcIdx,Width,Depth,EffI,EffZ,WallLength,RcCalcEnable,RebarDiaTop,RebarCountTop,RebarDiaBottom,RebarCountBottom,RcCoverTopStr,RcCoverBottomStr\n`;
     materials.forEach((mat, idx) => {
         if(idx >= spans.length) return;
-        csvContent += `[MATERIAL],${idx},${mat.matType},${mat.steelShape},${mat.steelProfileIdx},${mat.steelAxis},${mat.manualI},${mat.manualZ},${mat.manualA},${mat.manualE},${mat.rcFcIdx},${mat.rcWidthStr},${mat.rcDepthStr},${mat.effI},${mat.effZ},${mat.wallLength}\n`;
+        csvContent += `[MATERIAL],${idx},${mat.matType},${mat.steelShape},${mat.steelProfileIdx},${mat.steelAxis},${mat.manualI},${mat.manualZ},${mat.manualA},${mat.manualE},${mat.rcFcIdx},${mat.rcWidthStr},${mat.rcDepthStr},${mat.effI},${mat.effZ},${mat.wallLength},${mat.rcCalcEnable ? '1' : '0'},${mat.rcRebarDiaTop || ''},${mat.rcRebarCountTop || ''},${mat.rcRebarDiaBottom || ''},${mat.rcRebarCountBottom || ''},${mat.rcCoverTopStr || ''},${mat.rcCoverBottomStr || ''}\n`;
     });
     
     csvContent += `[HEADER_LOAD],Id,Type,Mag,Pos,Length,MagEnd\n`;
@@ -379,7 +382,11 @@ export default function App() {
                         matType: cols[2], steelShape: cols[3], steelProfileIdx: Number(cols[4]), steelAxis: cols[5],
                         manualI: cols[6], manualZ: cols[7], manualA: cols[8], manualE: cols[9],
                         rcFcIdx: Number(cols[10]), rcWidthStr: cols[11], rcDepthStr: cols[12],
-                        effI: cols[13], effZ: cols[14], wallLength: cols[15]
+                        effI: cols[13], effZ: cols[14], wallLength: cols[15],
+                        rcCalcEnable: cols[16] === '1',
+                        rcRebarDiaTop: cols[17] || 'D16', rcRebarCountTop: cols[18] || '2',
+                        rcRebarDiaBottom: cols[19] || 'D19', rcRebarCountBottom: cols[20] || '4',
+                        rcCoverTopStr: cols[21] || '50', rcCoverBottomStr: cols[22] || '50'
                     };
                 } else if (tag === '[INPUT_STEEL]') {
                     if(!newMaterials[0]) newMaterials[0] = {...defaultMaterial};
@@ -463,7 +470,7 @@ export default function App() {
               params={{ 
                   spanStr, beamType, loads, 
                   spanSectionProps, results, finalPoiData, 
-                  spans, totalLength, supports 
+                  spans, totalLength, supports, showStress
               }} 
           />
       );
@@ -529,22 +536,22 @@ export default function App() {
                 <p className="text-slate-500 text-sm mt-1">スパン毎の材料設定・任意断面入力・不連続点自動補正</p>
             </div>
             
-            <div className="flex flex-wrap items-center gap-2">
-                <button onClick={() => setShowHistory(true)} className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all"><History className="w-4 h-4 text-blue-500" />履歴</button>
-                <button onClick={() => setShowHelp(true)} className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all"><HelpCircle className="w-4 h-4 text-blue-500" />ヘルプ</button>
-                <button onClick={() => setShowResultWindow(!showResultWindow)} className={`flex items-center gap-2 px-3 py-2 border border-slate-300 rounded-lg text-sm font-bold shadow-sm transition-all ${showResultWindow ? 'bg-blue-100 text-blue-700 border-blue-400' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
-                <ExternalLink className="w-4 h-4" />別窓結果
+            <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto justify-start md:justify-end">
+                <button onClick={() => setShowHistory(true)} className="flex items-center gap-1.5 px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all"><History className="w-3.5 h-3.5 text-blue-500" />履歴</button>
+                <button onClick={() => setShowHelp(true)} className="flex items-center gap-1.5 px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all"><HelpCircle className="w-3.5 h-3.5 text-blue-500" />ヘルプ</button>
+                <button onClick={() => setShowResultWindow(!showResultWindow)} className={`flex items-center gap-1.5 px-2 py-1.5 border border-slate-300 rounded text-xs font-bold shadow-sm transition-all ${showResultWindow ? 'bg-blue-100 text-blue-700 border-blue-400' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+                <ExternalLink className="w-3.5 h-3.5" />別窓
                 </button>
-                <div className="flex items-center ml-2 border-l pl-4">
-                  <label className="flex items-center gap-2 cursor-pointer text-sm font-bold text-slate-600">
+                <div className="flex items-center ml-1 border-l pl-2 border-slate-300">
+                  <label className="flex items-center gap-1 cursor-pointer text-xs font-bold text-slate-600">
                     <input type="checkbox" checked={showStress} onChange={e => setShowStress(e.target.checked)} className="rounded text-blue-600 focus:ring-blue-500"/>
-                    応力表示
+                    応力
                   </label>
                 </div>
-                <button onClick={handlePrint} className="flex items-center gap-2 px-3 py-2 bg-blue-600 border border-transparent rounded-lg text-sm font-bold text-white hover:bg-blue-700 shadow-sm transition-all"><Printer className="w-4 h-4" />印刷</button>
+                <button onClick={handlePrint} className="flex items-center gap-1.5 px-2 py-1.5 bg-blue-600 border border-transparent rounded text-xs font-bold text-white hover:bg-blue-700 shadow-sm transition-all ml-1"><Printer className="w-3.5 h-3.5" />印刷</button>
                 
-                <button onClick={exportToCSV} className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all"><FileDown className="w-4 h-4" />結果出力(CSV)</button>
-                <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all"><Upload className="w-4 h-4" />読込(CSV)</button>
+                <button onClick={exportToCSV} className="flex items-center gap-1.5 px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all"><FileDown className="w-3.5 h-3.5" />CSV出力</button>
+                <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 px-2 py-1.5 bg-white border border-slate-300 rounded text-xs font-bold text-slate-600 hover:bg-slate-50 shadow-sm transition-all"><Upload className="w-3.5 h-3.5" />読込</button>
                 <input type="file" ref={fileInputRef} accept=".csv" onChange={importFromCSV} className="hidden" />
             </div>
             </div>
